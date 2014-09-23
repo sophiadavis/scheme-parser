@@ -59,14 +59,19 @@ def lambda_(params, exp, env=None):
         return eval(exp, env=outer_scopes + (new_scope,))
     return the_function
 
+def let(bindings, expression, env=None):
+    local_scope = {var: eval(val, env) for [var, val] in bindings}
+    return eval(expression, env + (local_scope,))
+
 
 def valid_symbol(s):
     return isinstance(s, str) and not (s.isdigit() or s in ['#t', '#f'])
 
 special_forms = {'define': define,
-                 'lambda': lambda_}
+                 'lambda': lambda_,
+                 'let'   : let }
 
-def eval(ast, env=(default_scope,)):
+def eval(ast, env):
     if (isinstance(ast, list) and isinstance(ast[0], str) and
             ast[0] in special_forms):
         return special_forms[ast[0]](*ast[1:], env=env)
@@ -80,16 +85,26 @@ def eval(ast, env=(default_scope,)):
             if ast in scope:
                 return scope[ast]
         else:
-            raise ValueError(repr(ast))
+            raise NameError(repr(ast))
     else:
         raise ValueError(repr(ast))
 
-def eval_read(s):
-    return eval(read(s))
+def eval_one(s):
+    return eval_read(s, (default_scope.copy(),))
+
+def eval_several(s_list):
+    env = (default_scope.copy(),)
+    for s in s_list:
+        evaled = eval(s, env)
+    return evaled
+
+def eval_read(s, env):
+    return eval(read(s), env)
 
 def repl():
+    initial_scope = (default_scope.copy(),)
     while True:
-        print eval_read(raw_input())
+        print eval_read(raw_input(), initial_scope)
 
 if __name__ == '__main__':
     repl()
