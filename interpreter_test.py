@@ -32,6 +32,7 @@ class TestParse(unittest.TestCase):
     def test_lambda(self):
         self.assertEquals(interpreter.eval_read('((lambda (x) x) 1)'), 1)
         self.assertEquals(interpreter.eval_read('((lambda (x) (+ x 1)) 2)'), 3)
+        self.assertEquals(interpreter.eval_read('((lambda (x) (+ 4 (+ x 1))) 2)'), 7)
 
 
 if __name__ == "__main__":
