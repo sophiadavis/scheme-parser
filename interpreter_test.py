@@ -9,6 +9,9 @@ class TestParse(unittest.TestCase):
     def test_it_parses_lists(self):
         self.assertEquals(interpreter.read('(1 2 3)'), ["1", "2", "3"])
 
+    def test_it_parses_single_atoms(self):
+        self.assertEquals(interpreter.read('1'), "1")
+
     def test_it_parses_application(self):
         self.assertEquals(interpreter.read('(+ 1 2)'), ["+", "1", "2"])
 
@@ -21,6 +24,11 @@ class TestParse(unittest.TestCase):
         self.assertEquals(interpreter.eval(['-', '4']), -4)
         with self.assertRaises(TypeError):
             interpreter.eval(['-'])
+
+    def test_define(self):
+        self.assertEquals(interpreter.eval_read('(define a 1)'), None)
+        self.assertEquals(interpreter.eval_read('a'), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

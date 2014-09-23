@@ -10,11 +10,16 @@ def tokenize(s):
 def read(s):
     tokens = tokenize(s)
     t = iter(tokens)
-    assert next(t) == "("
-    return read_tokens(t)
-
+    first = next(t)
+    if first == "(":
+        return read_tokens(t)
+    else:
+        for _ in t:
+            raise SyntaxError()
+        return first
 
 def read_tokens(tokens):
+    """Reads the tokens inside of a s-expression"""
     l = []
     while True:
         current = next(tokens)  # try except for catching syntax errors
@@ -38,8 +43,15 @@ default_env = {
         '-': scheme_sub
         }
 
+def define(symbol, value, env=None):
+    env[symbol] = eval(value)
+
+special_forms = {'define': define}
+
 def eval(ast):
-    if isinstance(ast, list):
+    if isinstance(ast, list) and ast[0] in special_forms:
+        special_forms[ast[0]](*ast[1:], env=default_env)
+    elif isinstance(ast, list):
         evaled = [eval(x) for x in ast]
         return evaled[0](*evaled[1:])
     elif isinstance(ast, str) and ast.isdigit():
@@ -49,9 +61,12 @@ def eval(ast):
     else:
         raise ValueError(repr(ast))
 
+def eval_read(s):
+    return eval(read(s))
+
 def repl():
     while True:
-        print eval(read(raw_input()))
+        print eval_read(raw_input())
 
 if __name__ == '__main__':
     repl()
