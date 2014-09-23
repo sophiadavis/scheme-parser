@@ -46,9 +46,6 @@ class TestParse(unittest.TestCase):
         with self.assertRaises(NameError):
             self.assertEvalsTo('(+ (let ((a 1)) (+ a a)) a)', None)
 
-    # def tearDown(self):
-
-
 
 if __name__ == "__main__":
     unittest.main()

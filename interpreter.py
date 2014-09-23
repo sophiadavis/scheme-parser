@@ -1,8 +1,7 @@
 # ()
 import operator
-
 import re
-
+import traceback
 
 def tokenize(s):
     return re.findall(r"[()]|[^\s()]+", s)
@@ -89,6 +88,42 @@ def eval(ast, env):
     else:
         raise ValueError(repr(ast))
 
+def define_code(symbol, value):
+    return "locals().__setitem__('%s', %s)" % (symbol, code_gen(value))
+
+def lambda_code(params, exp):
+    if not isinstance(params, list):
+        raise SyntaxError('lambda got bad params')
+    if not all(valid_symbol(x) for x in params):
+        raise SyntaxError('lambda got bad params: %r', params)
+    return "(lambda %s : %s" % (", ".join(params), code_gen(exp)) + ")"
+
+def let_code(bindings, expression):
+    local_scope = {var: code_gen(val) for [var, val] in bindings}
+    return "(lambda " + ",".join(local_scope.keys()) + " : " + code_gen(expression) + ")(" + ",".join(local_scope.values()) + ")"
+
+special_forms_code_gen = {'define': define_code,
+                          'lambda': lambda_code,
+                          'let'   : let_code }
+
+lookup_table = {'+' : "(lambda *args : sum(args))",
+                '-' : "__import__('operator').sub"}
+
+
+def code_gen(ast):
+    if (isinstance(ast, list) and isinstance(ast[0], str) and
+            ast[0] in special_forms_code_gen):
+        return special_forms_code_gen[ast[0]](*ast[1:])
+    elif isinstance(ast, list):
+        code_parts = [code_gen(x) for x in ast]
+        return code_parts[0] + "(" + ",".join(code_parts[1:]) + ")"
+    elif isinstance(ast, str) and ast.isdigit():
+        return ast
+    elif isinstance(ast, str):
+        return lookup_table.get(ast, ast)
+    else:
+        raise SyntaxError(repr(ast))
+
 def eval_one(s):
     return eval_read(s, (default_scope.copy(),))
 
@@ -106,5 +141,15 @@ def repl():
     while True:
         print eval_read(raw_input(), initial_scope)
 
+def python_code_repl():
+    while True:
+        py_code = code_gen(read(raw_input()))
+        print ">> " + py_code
+        try:
+            print __builtins__.eval(py_code)
+        except:
+            traceback.print_exc()
+
 if __name__ == '__main__':
-    repl()
+    # repl()
+    python_code_repl()
