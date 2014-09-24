@@ -143,8 +143,8 @@ def repl():
 
 def python_code_repl():
     while True:
-        py_code = code_gen(read(raw_input()))
-        print ">> " + py_code
+        py_code = code_gen(read(raw_input("\nScheme > ")))
+        print ">>> " + py_code
         try:
             print __builtins__.eval(py_code)
         except:
